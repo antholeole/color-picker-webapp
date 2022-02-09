@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_color_picker/child_size_notifier.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_pixels/image_pixels.dart';
 import 'package:collection/collection.dart';
@@ -28,52 +29,45 @@ class _EverythingWidgetState extends State<EverythingWidget> {
       body: Column(
         children: [
           ImagePixels(
-              imageProvider: _image,
-              defaultColor: Colors.grey,
-              builder: (context, img) {
-                if (!img.hasImage) {
-                  return const Text('no image Selected');
-                } else {
-                  return GestureDetector(
-                      onTapDown: (details) {
-                        final localPosition = details.localPosition;
+            imageProvider: _image,
+            defaultColor: Colors.grey,
+            builder: (context, img) {
+              if (!img.hasImage) {
+                return const Text('no image Selected');
+              } else {
+                return ChildSizeNotifier(
+                  builder: (_, size, __) {
+                    return GestureDetector(
+                        onTapDown: (details) {
+                          final alignment = Alignment(
+                              ((details.localPosition.dx.toInt() / size.width) *
+                                      2) -
+                                  1,
+                              ((details.localPosition.dy.toInt() /
+                                          size.height) *
+                                      2) -
+                                  1);
 
-                        final dx = details.localPosition.dx.toInt();
-                        final dy = details.localPosition.dy.toInt();
-
-                        print("$dx $dy");
-
-                        /*
-                        final dxs = [dx - 1, dx + 1, dx];
-                        final dys = [dy - 1, dy + 1, dy];
-
-                        final List<Color> colors = [];
-                        for (var dy in dys) {
-                          for (var dx in dxs) {
-                            colors.add();
-                          }
-                        }
-                        */
-
-                        setState(() {
-                          _color = img.pixelColorAt!(dx, dy);
-                        });
-                      },
-                      child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                              minWidth: 500, maxHeight: 500),
-                          child: Image(
-                            image: _image!,
-                            fit: BoxFit.fitHeight,
-                          )));
-                }
-              }),
+                          setState(() {
+                            _color = img.pixelColorAtAlignment!(alignment);
+                          });
+                        },
+                        child: Image(
+                          width: 300,
+                          image: _image!,
+                        ));
+                  },
+                );
+              }
+            },
+          ),
           ElevatedButton(
               onPressed: _uploadImage, child: const Text('upload image')),
           if (_image != null && _color == null)
             const Text('no color selected; click on the image'),
           if (_image != null && _color != null) ...[
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text('selected color hex is ${_color!.toHex()}'),
                 GestureDetector(
